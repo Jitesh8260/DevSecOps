@@ -1,0 +1,57 @@
+# Node modules
+Devoapp/node_modules/
+
+# Build output
+Devoapp/build/
+Devoapp/dist/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# OS-generated files
+.DS_Store
+Thumbs.db
+
+# Terraform state files
+terraform/*.tfstate
+terraform/*.tfstate.backup
+terraform/.terraform/
+
+# Ignore downloaded binaries (kubeseal, crictl, minikube, etc.)
+k8s/kubeseal*
+k8s/crictl-*
+k8s/minikube-*
+
+# Ignore cluster-specific kube config
+.kube/
+
+# GitHub Actions self-hosted runner
+actions-runner/
+
+# React testing artifacts
+coverage/
+*.log
+
+# Ignore IDE settings (optional)
+.vscode/
+.idea/
+*.swp
+
+# Local runner junk
+actions-runner/
+
+# React app build files
+Devoapp/node_modules/
+Devoapp/build/
+Devoapp/dist/
+
+# Binaries
+k8s/kubeseal*
+k8s/crictl*

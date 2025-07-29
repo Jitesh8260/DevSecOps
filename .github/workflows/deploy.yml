@@ -1,0 +1,98 @@
+name: DevSecOps CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-scan:
+    name: Build, Scan and Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+
+    - name: Install dependencies
+      run: |
+        cd Devoapp
+        npm ci
+
+    - name: Run React tests
+      run: |
+        cd Devoapp
+        npm test -- --watchAll=false --passWithNoTests
+
+    - name: Build React App
+      run: |
+        cd Devoapp
+        npm run build
+
+    # ------------------------
+    # Terraform Security Scan
+    # ------------------------
+    - name: Install tfsec
+      run: |
+        curl -s https://raw.githubusercontent.com/aquasecurity/tfsec/master/scripts/install_linux.sh | bash
+
+    - name: Run tfsec on Terraform code
+      run: tfsec terraform/
+
+    # ------------------------
+    # Docker Image Scan with Trivy
+    # ------------------------
+    - name: Install Trivy
+      run: |
+        sudo apt-get install wget apt-transport-https gnupg lsb-release -y
+        wget -qO - https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo apt-key add -
+        echo deb https://aquasecurity.github.io/trivy-repo/deb $(lsb_release -sc) main | sudo tee -a /etc/apt/sources.list.d/trivy.list
+        sudo apt-get update && sudo apt-get install trivy -y
+
+    - name: Build Docker image
+      run: docker build -t devoapp-image ./Devoapp
+
+    - name: Scan Docker image with Trivy
+      run: trivy image devoapp-image
+
+    # ------------------------
+    # Setup kind cluster inside CI
+    # ------------------------
+    - name: Set up Kubernetes (kind)
+      uses: helm/kind-action@v1.7.0
+
+    - name: Verify kind cluster
+      run: kubectl cluster-info
+
+    # ------------------------
+    # Apply Sealed Secrets and Deploy
+    # ------------------------
+    - name: Apply Kubernetes Secrets
+      run: |
+        kubectl apply -f k8s/pod-with-secret.yaml
+        kubectl apply -f k8s/temp-secret.yaml
+
+    - name: Deploy K8s Manifests
+      run: |
+        kubectl apply -f k8s/service.yaml
+        kubectl apply -f k8s/deplopyment.yml
+
+    - name: Check Running Pods
+      run: kubectl get pods -A
+
+    # ------------------------
+    # Terraform Infrastructure Update (Optional)
+    # ------------------------
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+
+    - name: Terraform Init and Apply
+      run: |
+        cd terraform
+        terraform init
+        terraform apply -auto-approve
