@@ -112,7 +112,7 @@ _Add your screenshots of the GitHub Actions pipeline, app running, tfsec output,
 
 - **Jitesh Bhakat**  
 - DevOps & Security Enthusiast  
-- [GitHub Profile](https://github.com/Jitesh8260)
+- [Jitesh8060](https://github.com/Jitesh8260)
 
 ---
 
